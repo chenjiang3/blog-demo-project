@@ -8,6 +8,7 @@
 
 import UIKit
 import RxSwift
+import RxCocoa
 import SnapKit
 
 class RxSwiftViewController: UIViewController {
@@ -19,6 +20,15 @@ class RxSwiftViewController: UIViewController {
         btn.addTarget(self, action: #selector(onClicked(_:)), for: .touchUpInside)
         return btn
     }()
+    
+    lazy var button2: UIButton = {
+        let btn: UIButton = UIButton(type: .custom)
+        btn.setTitle("button2", for: .normal)
+        btn.setTitleColor(UIColor.red, for: .normal)
+        return btn
+    }()
+    
+    lazy var disposeBag: DisposeBag = DisposeBag()
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -29,10 +39,36 @@ class RxSwiftViewController: UIViewController {
         self.button.snp.makeConstraints { (make) in
             make.centerX.centerY.equalToSuperview()
         }
+        
+        self.view.addSubview(self.button2)
+        self.button2.snp.makeConstraints { (make) in
+            make.centerX.equalToSuperview()
+            make.top.equalTo(self.button.snp.bottom).offset(20)
+        }
+        
+        button2.rx.tap
+            .subscribe(onNext: { (e) in
+                print(e)
+            }).disposed(by: self.disposeBag)
     }
     
     @objc func onClicked(_ sender: Any?) {
-        print("onClicked")
+        let observable = Observable<String>.create { (observer) -> Disposable in
+            observer.on(Event.next("HelloWorld！"))
+            observer.onCompleted()
+            
+            return Disposables.create()
+        }
+        
+        let disposeBag = DisposeBag()
+        
+        observable.subscribe(onNext: { (str) in
+            print(str)
+        }, onError: { (error) in
+            
+        }, onCompleted: {
+            
+        }).disposed(by: disposeBag)
     }
 
     override func didReceiveMemoryWarning() {
